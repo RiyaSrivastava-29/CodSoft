@@ -1,31 +1,43 @@
 import math
-
-def print_board(board):
-    for row in board:
+        
+def print_tabletop(tabletop):
+    for row in tabletop:
         print(' '.join(row))
     print()
 
-def check_winner(board):
-    for row in board:
+def check_winner(tabletop):
+    for row in tabletop:
         if row[0] == row[1] == row[2] and row[0] != ' ':
             return row[0]
     for col in range(3):
-        if board[0][col] == board[1][col] == board[2][col] and board[0][col] != ' ':
-            return board[0][col]
-    if board[0][0] == board[1][1] == board[2][2] and board[0][0] != ' ':
-        return board[0][0]
-    if board[0][2] == board[1][1] == board[2][0] and board[0][2] != ' ':
-        return board[0][2]
-    for row in board:
+        if tabletop[0][col] == tabletop[1][col] == tabletop[2][col] and tabletop[0][col] != ' ':
+            return tabletop[0][col]
+    if tabletop[0][0] == tabletop[1][1] == tabletop[2][2] and tabletop[0][0] != ' ':
+        return tabletop[0][0]
+    if tabletop[0][2] == tabletop[1][1] == tabletop[2][0] and tabletop[0][2] != ' ':
+        return tabletop[0][2]
+    for row in tabletop:
         if ' ' in row:
             return None
     return 'Tie'
 
-def get_empty_cells(board):
-    return [(i, j) for i in range(3) for j in range(3) if board[i][j] == ' ']
+def best_move(tabletop):
+    best_val = -math.inf
+    move = None
+    for (i, j) in empty_cells(tabletop):
+        tabletop[i][j] = 'O'
+        move_val = minimax(tabletop, False, -math.inf, math.inf)
+        tabletop[i][j] = ' '
+        if move_val > best_val:
+            best_val = move_val
+            move = (i, j)
+    return move
+    
+def empty_cells(tabletop):
+    return [(i, j) for i in range(3) for j in range(3) if tabletop[i][j] == ' ']
 
-def minimax(board, is_maximizing, alpha, beta):
-    winner = check_winner(board)
+def minimax(tabletop, maximize, a, b):
+    winner = check_winner(tabletop)
     if winner == 'X':
         return -10
     elif winner == 'O':
@@ -33,47 +45,35 @@ def minimax(board, is_maximizing, alpha, beta):
     elif winner == 'Tie':
         return 0
 
-    if is_maximizing:
+    if maximize:
         max_eval = -math.inf
-        for (i, j) in get_empty_cells(board):
-            board[i][j] = 'O'
-            eval = minimax(board, False, alpha, beta)
-            board[i][j] = ' '
+        for (i, j) in empty_cells(tabletop):
+            tabletop[i][j] = 'O'
+            eval = minimax(tabletop, False, a, b)
+            tabletop[i][j] = ' '
             max_eval = max(max_eval, eval)
-            alpha = max(alpha, eval)
-            if beta <= alpha:
+            a = max(a, eval)
+            if b <= a:
                 break
         return max_eval
     else:
         min_eval = math.inf
-        for (i, j) in get_empty_cells(board):
-            board[i][j] = 'X'
-            eval = minimax(board, True, alpha, beta)
-            board[i][j] = ' '
+        for (i, j) in empty_cells(tabletop):
+            tabletop[i][j] = 'X'
+            eval = minimax(tabletop, True, a, b)
+            tabletop[i][j] = ' '
             min_eval = min(min_eval, eval)
-            beta = min(beta, eval)
-            if beta <= alpha:
+            b = min(b, eval)
+            if b <= a:
                 break
         return min_eval
 
-def best_move(board):
-    best_val = -math.inf
-    move = None
-    for (i, j) in get_empty_cells(board):
-        board[i][j] = 'O'
-        move_val = minimax(board, False, -math.inf, math.inf)
-        board[i][j] = ' '
-        if move_val > best_val:
-            best_val = move_val
-            move = (i, j)
-    return move
-
-def human_move(board):
+def riya_move(tabletop):
     while True:
         try:
-            x, y = map(int, input("Enter your move (row and column between 0-2): ").split())
-            if board[x][y] == ' ':
-                board[x][y] = 'X'
+            x, y = map(int, input("Enter your move (row and column between 0-2 with spaces): ").split())
+            if tabletop[x][y] == ' ':
+                tabletop[x][y] = 'X'
                 break
             else:
                 print("Invalid move! Try again.")
@@ -81,28 +81,28 @@ def human_move(board):
             print("Invalid input! Enter row and column numbers.")
 
 def play_game():
-    board = [[' ' for _ in range(3)] for _ in range(3)]
+    tabletop = [[' ' for _ in range(3)] for _ in range(3)]
     print("Welcome to Tic-Tac-Toe!")
-    print_board(board)
+    print_tabletop(tabletop)
     
     while True:
-        human_move(board)
-        print_board(board)
-        if check_winner(board):
+        riya_move(tabletop)
+        print_tabletop(tabletop)
+        if check_winner(tabletop):
             break
-        print("AI is making a move...")
-        move = best_move(board)
+        print("AI made the move ->")
+        move = best_move(tabletop)
         if move:
-            board[move[0]][move[1]] = 'O'
-        print_board(board)
-        if check_winner(board):
+            tabletop[move[0]][move[1]] = 'O'
+        print_tabletop(tabletop)
+        if check_winner(tabletop):
             break
 
-    winner = check_winner(board)
+    winner = check_winner(tabletop)
     if winner == 'Tie':
         print("It's a tie!")
     else:
         print(f"The winner is {winner}!")
-
+        
 if __name__ == "__main__":
     play_game()
