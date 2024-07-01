@@ -1,0 +1,78 @@
+from math import sqrt
+
+# Sample movie data
+movies = {
+    1: {'title': '3 Idiots', 'genre': ['Comedy','Motivational']},
+    2: {'title': 'Bhaiyya Ji', 'genre': ['Crime', 'Drama']},
+    3: {'title': 'Animal', 'genre': ['Action', 'Crime', 'Drama']},
+    4: {'title': 'Krish', 'genre': ['Action', 'Sci-Fi']},
+    5: {'title': 'Jab We Met', 'genre': ['Drama', 'Romance']}
+}
+
+# Sample user ratings
+user_ratings = {
+    1: {1: 5, 2: 4, 3: 3},
+    2: {1: 4, 2: 5, 3: 4, 4: 3},
+    3: {2: 4, 3: 5, 4: 4, 5: 3}
+}
+
+def calculate_user_similarity(user1, user2, user_ratings):
+    """
+    Calculate the Pearson correlation coefficient between two users.
+    """
+    if not user_ratings[user1] or not user_ratings[user2]:
+        return 0
+
+    sum_xy = 0
+    sum_x2 = 0
+    sum_y2 = 0
+    sum_x = 0
+    sum_y = 0
+    n = 0
+
+    for item in user_ratings[user1]:
+        if item in user_ratings[user2]:
+            x = user_ratings[user1][item]
+            y = user_ratings[user2][item]
+            sum_xy += x * y
+            sum_x2 += x ** 2
+            sum_y2 += y ** 2
+            sum_x += x
+            sum_y += y
+            n += 1
+
+    if n == 0:
+        return 0
+
+    denominator = sqrt((sum_x2 - (sum_x ** 2) / n) * (sum_y2 - (sum_y ** 2) / n))
+    if denominator == 0:
+        return 0
+
+    return (sum_xy - (sum_x * sum_y) / n) / denominator
+
+def get_recommendations(target_user, user_ratings, movies, top_n=2):
+    """
+    Get the top N recommendations for a target user based on collaborative filtering.
+    """
+    similarities = {}
+    for user in user_ratings:
+        if user != target_user:
+            sim = calculate_user_similarity(target_user, user, user_ratings)
+            similarities[user] = sim
+
+    recommendations = {}
+    for user, sim in sorted(similarities.items(), key=lambda x: x[1], reverse=True):
+        for item in user_ratings[user]:
+            if item not in user_ratings[target_user]:
+                if item not in recommendations:
+                    recommendations[item] = 0
+                recommendations[item] += sim * user_ratings[user][item]
+
+    return sorted(recommendations.items(), key=lambda x: x[1], reverse=True)[:top_n]
+
+# Example usage
+target_user = 3
+top_recommendations = get_recommendations(target_user, user_ratings, movies)
+print(f"Top {len(top_recommendations)} recommendations for user {target_user}:")
+for movie_id, score in top_recommendations:
+    print(f"{movies[movie_id]['title']} - {score:.2f}")
